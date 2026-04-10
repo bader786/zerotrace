@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroTrace | Next-Gen Security</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-red: #ff003c;
+            --dark-bg: #050505;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border-glass: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: crosshair;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- 3D Background --- */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- Loading / Scanning Screen --- */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease;
+        }
+
+        .scan-bar {
+            width: 300px;
+            height: 2px;
+            background: var(--neon-blue);
+            box-shadow: 0 0 15px var(--neon-blue);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scan-bar::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            animation: scan 1.5s infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* --- Reusable Styles --- */
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: 4px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        .neon-text-blue { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+        .neon-text-red { color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); }
+
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            padding: 15px 35px;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.4s;
+            border-radius: 2px;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            box-shadow: inset 0 0 0 0 var(--neon-blue);
+        }
+
+        .btn-primary:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 25px var(--neon-blue);
+        }
+
+        /* --- Sections --- */
+        section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 80px 10%;
+        }
+
+        /* Hero */
+        .hero { text-align: center; align-items: center; }
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(3rem, 10vw, 6rem);
+            letter-spacing: 15px;
+            margin-bottom: 0;
+            background: linear-gradient(to bottom, #fff, #555);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .feature-card {
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: var(--neon-blue);
+        }
+
+        /* Warning UI Demo */
+        .warning-demo {
+            border: 2px solid var(--neon-red);
+            background: rgba(255, 0, 60, 0.05);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            animation: pulse-red 2s infinite;
+        }
+        
+
+        @keyframes pulse-red {
+            0% { box-shadow: inset 0 0 10px var(--neon-red); }
+            50% { box-shadow: inset 0 0 40px var(--neon-red); }
+            100% { box-shadow: inset 0 0 10px var(--neon-red); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            section { padding: 40px 5%; }
+            .hero h1 { letter-spacing: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <h2 class="neon-text-blue" style="font-family: 'Orbitron'; margin-bottom: 20px;">SYSTEM SCANNING...</h2>
+        <div class="scan-bar"></div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <section class="hero">
+        <div style="margin-bottom: 40px;">
+            <p class="neon-text-blue" style="letter-spacing: 5px; font-weight: bold;">ENCRYPTED // PROTOCOL 1.1</p>
+            <h1>ZEROTRACE</h1>
+            <h3 class="neon-text-red" style="font-family: 'Orbitron';">Engineered for Extreme Security Scenarios.</h3>
+            <p style="font-size: 1.2rem; opacity: 0.7; max-width: 600px; margin-top: 15px;">A next-generation mobile protection system designed for high-risk security environments.</p>
+        </div>
+        <a href="mailto:baderahmed098123@gmail.com?subject=Request%20Access%20-%20ZeroTrace%20App" class="btn btn-primary">Mail to Get Software Access</a>
+    </section>
+
+    <section>
+        <div class="glass-panel" style="max-width: 900px; margin: 0 auto;">
+            <h2 class="neon-text-blue" style="font-family: 'Orbitron'; margin-bottom: 25px;">ABOUT THE CREATOR</h2>
+            <p style="font-size: 1.1rem; line-height: 1.8;">
+                Developed by <strong>Mohammed Bader E Ahmed</strong>, Artificial Intelligence and Machine Learning (AI/ML) engineering student. <br><br>
+                This project was created with a strong focus on data safety and theft awareness. It explores how advanced security mechanisms can be implemented and controlled in mobile environments. 
+                ZeroTrace is designed to demonstrate high-level security responses and promote awareness about device protection and data risk.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2 style="font-family: 'Orbitron'; text-align: center; margin-bottom: 60px;">CORE ARCHITECTURE</h2>
+        <div class="features-grid">
+            <div class="glass-panel feature-card">
+                <h4 class="neon-text-blue">48-Hour Inactivity</h4>
+                <p>Advanced logic to detect prolonged device dormancy and trigger security protocols.</p>
+            </div>
+            <div class="glass-panel feature-card">
+                <h4 class="neon-text-red">Trigger Mechanism</h4>
+                <p>Device-level security hooks designed for rapid response in high-risk scenarios.</p>
+            </div>
+            <div class="glass-panel feature-card">
+                <h4 class="neon-text-blue">Alert Interface</h4>
+                <p>High-fidelity realistic security UI designed for maximum user awareness.</p>
+            </div>
+            <div class="glass-panel feature-card">
+                <h4 class="neon-text-red">Efficient Core</h4>
+                <p>Lightweight system design that operates seamlessly without compromising performance.</p>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 50px; align-items: center;">
+            <div>
+                <h2 class="neon-text-blue" style="font-family: 'Orbitron'; margin-bottom: 20px;">SYSTEM POWER</h2>
+                <p>A highly refined system engineered to challenge conventional mobile security approaches. Built with precision and designed for controlled execution of critical security actions under defined conditions.</p>
+            </div>
+            <div class="warning-demo">
+                <h3 class="neon-text-red" style="font-family: 'Orbitron';">!!! CRITICAL WARNING !!!</h3>
+                <p style="font-family: monospace; font-size: 0.9rem; margin-top: 10px;">
+                    > UNAUTHORIZED ACCESS DETECTED<br>
+                    > INITIALIZING DATA_WIPE_DAEMON<br>
+                    > STANDBY FOR PERMISSION OVERRIDE...
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="glass-panel" style="border-left: 4px solid var(--neon-red);">
+            <h2 class="neon-text-red" style="font-family: 'Orbitron';">CRITICAL SECURITY NOTICE</h2>
+            <p style="margin-top: 20px;">ZeroTrace includes a device reset mechanism designed for controlled security scenarios. If triggered, the application may initiate a <strong>full device data reset</strong> using system-level permissions.</p>
+            <div style="margin-top: 20px; font-weight: bold; color: var(--neon-red);">WARNING: This action is irreversible and will permanently erase all user data on the device.</div>
+        </div>
+    </section>
+
+    <section style="text-align: center;">
+        <h2 class="neon-text-blue" style="font-family: 'Orbitron';">RESTRICTED ACCESS</h2>
+        <p style="margin: 20px 0;">ZeroTrace is not publicly distributed. To request access, contact:</p>
+        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+            <a href="mailto:baderahmed098123@gmail.com?subject=Request%20Access%20-%20ZeroTrace%20App" class="btn btn-primary">Gmail Access</a>
+            <a href="https://www.linkedin.com/in/mohammed-bader-e-ahmed-757963285/" class="btn" style="border: 1px solid #fff; color: #fff;">LinkedIn Profile</a>
+        </div>
+        <p style="margin-top: 30px; font-size: 0.9rem; opacity: 0.6;">Subject: Request Access – ZeroTrace <br> Include your purpose (testing / research / security)</p>
+    </section>
+
+    <section style="min-height: auto; padding-bottom: 100px;">
+        <div style="font-size: 0.8rem; opacity: 0.5; text-align: center; border-top: 1px solid var(--border-glass); padding-top: 40px;">
+            <p>The developer is not responsible for any data loss, device damage, or misuse. Improper use may result in permanent data loss.</p>
+        </div>
+    </section>
+
+    <footer style="padding: 40px; text-align: center; font-family: 'Orbitron'; letter-spacing: 3px; font-size: 0.8rem;">
+        © 2024 Mohammed Bader E Ahmed // ZEROTRACE_PROTOCOL
+    </footer>
+
+    <script>
+        // --- Loader Logic ---
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 1000);
+            }, 1500);
+        });
+
+        // --- Three.js Background Implementation ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Particle field
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 3000;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i=0; i<particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 10;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.005,
+            color: '#00f3ff',
+            transparent: true,
+            opacity: 0.8
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // Central Wireframe Globe (Network Grid)
+        const geometry = new THREE.IcosahedronGeometry(2, 2);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xff003c,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15
+        });
+        const sphere = new THREE.Mesh(geometry, material);
+        scene.add(sphere);
+
+        camera.position.z = 3;
+
+        // Interaction state
+        let mouseX = 0;
+        let mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Subtle Auto-rotations
+            particlesMesh.rotation.y += 0.001;
+            sphere.rotation.y -= 0.002;
+
+            // Interactive movement
+            const targetX = (mouseX - window.innerWidth / 2) * 0.0001;
+            const targetY = (mouseY - window.innerHeight / 2) * 0.0001;
+            
+            particlesMesh.rotation.x += 0.05 * (targetY - particlesMesh.rotation.x);
+            particlesMesh.rotation.y += 0.05 * (targetX - particlesMesh.rotation.y);
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Responsive Resizing
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
