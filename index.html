@@ -42,7 +42,7 @@
             pointer-events: none;
         }
 
-        /* --- Loading / Scanning Screen --- */
+      
         #loader {
             position: fixed;
             inset: 0;
@@ -78,7 +78,7 @@
             100% { transform: translateX(100%); }
         }
 
-        /* --- Reusable Styles --- */
+       
         .glass-panel {
             background: var(--glass);
             backdrop-filter: blur(12px);
@@ -116,7 +116,7 @@
             box-shadow: 0 0 25px var(--neon-blue);
         }
 
-        /* --- Sections --- */
+       
         section {
             min-height: 100vh;
             display: flex;
@@ -125,7 +125,7 @@
             padding: 80px 10%;
         }
 
-        /* Hero */
+       
         .hero { text-align: center; align-items: center; }
         .hero h1 {
             font-family: 'Orbitron', sans-serif;
@@ -137,7 +137,8 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Features */
+        
+    
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -154,7 +155,7 @@
             border-color: var(--neon-blue);
         }
 
-        /* Warning UI Demo */
+     
         .warning-demo {
             border: 2px solid var(--neon-red);
             background: rgba(255, 0, 60, 0.05);
@@ -171,11 +172,45 @@
             100% { box-shadow: inset 0 0 10px var(--neon-red); }
         }
 
-        /* Responsive */
+      
         @media (max-width: 768px) {
             section { padding: 40px 5%; }
             .hero h1 { letter-spacing: 5px; }
         }
+        /* --- Updated H1 for better visibility --- */
+.hero h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2.5rem, 12vw, 6rem); /* Adjusted for better mobile scaling */
+    letter-spacing: 8px; /* Slightly reduced for mobile screens */
+    margin-bottom: 0;
+    position: relative;
+    z-index: 10; /* Ensures text is definitely above the 3D canvas */
+    
+    /* Fix for mobile gradient rendering */
+    background: linear-gradient(to bottom, #ffffff 30%, #888888 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2)); 
+}
+
+
+@media (max-width: 768px) {
+    .hero h1 {
+        letter-spacing: 4px; 
+        background: #ffffff; 
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        opacity: 1 !important;
+        font-weight: 900;
+    }
+    
+    /* Optional: Dims the background slightly more on mobile to help text contrast */
+    #canvas-container {
+        opacity: 0.6;
+    }
+}
     </style>
 </head>
 <body>
@@ -276,7 +311,7 @@
     </footer>
 
     <script>
-        // --- Loader Logic ---
+       
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.getElementById('loader').style.opacity = '0';
@@ -284,14 +319,14 @@
             }, 1500);
         });
 
-        // --- Three.js Background Implementation ---
+       
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        // Particle field
+        
         const particlesGeometry = new THREE.BufferGeometry();
         const particlesCount = 3000;
         const posArray = new Float32Array(particlesCount * 3);
@@ -311,7 +346,7 @@
         const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
         scene.add(particlesMesh);
 
-        // Central Wireframe Globe (Network Grid)
+      
         const geometry = new THREE.IcosahedronGeometry(2, 2);
         const material = new THREE.MeshBasicMaterial({
             color: 0xff003c,
@@ -324,7 +359,7 @@
 
         camera.position.z = 3;
 
-        // Interaction state
+       
         let mouseX = 0;
         let mouseY = 0;
         document.addEventListener('mousemove', (e) => {
@@ -332,15 +367,15 @@
             mouseY = e.clientY;
         });
 
-        // Animation Loop
+       
         function animate() {
             requestAnimationFrame(animate);
 
-            // Subtle Auto-rotations
+            
             particlesMesh.rotation.y += 0.001;
             sphere.rotation.y -= 0.002;
 
-            // Interactive movement
+            
             const targetX = (mouseX - window.innerWidth / 2) * 0.0001;
             const targetY = (mouseY - window.innerHeight / 2) * 0.0001;
             
@@ -352,7 +387,6 @@
 
         animate();
 
-        // Responsive Resizing
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
